@@ -19,20 +19,9 @@ body {
   min-height: 100vh;
 }
 
-/* HEADER */
-h1 {
-  font-size: 2rem;
-  font-weight: 900;
-  color: #0a0a0a;
-  margin-bottom: 0.2rem;
-}
-.sub {
-  font-size: 0.9rem;
-  color: #444;
-  margin-bottom: 1.4rem;
-}
+h1 { font-size: 2rem; font-weight: 900; color: #0a0a0a; margin-bottom: 0.2rem; }
+.sub { font-size: 0.9rem; color: #444; margin-bottom: 1.4rem; }
 
-/* CARD */
 .card {
   background: #fff;
   border-radius: 1.2rem;
@@ -41,26 +30,44 @@ h1 {
   box-shadow: 0 2px 16px rgba(60,80,180,0.10);
 }
 
+/* SETUP URL */
+.setup-label { font-size: 0.85rem; font-weight: 700; color: #555; margin-bottom: 0.5rem; }
+.setup-row { display: flex; gap: 0.6rem; }
+.setup-row input {
+  flex: 1; padding: 0.75rem; border-radius: 0.8rem;
+  border: 2px solid #ccd5f5; font-size: 0.85rem;
+  color: #111; outline: none;
+  background: #f5f7ff;
+}
+.setup-row input:focus { border-color: #4f8ef7; }
+.setup-row button {
+  padding: 0.75rem 1rem; border-radius: 0.8rem;
+  background: #4f8ef7; color: #fff;
+  font-size: 0.85rem; font-weight: 800;
+  border: none; cursor: pointer;
+  white-space: nowrap;
+}
+#gasStatus {
+  font-size: 0.8rem; margin-top: 0.5rem;
+  font-weight: 600; min-height: 1.2em;
+}
+.ok  { color: #1a7a3a; }
+.err { color: #cc0000; }
+
 /* STATO */
 #stato {
-  font-size: 1.1rem;
-  font-weight: 700;
-  color: #333;
-  text-align: center;
-  margin-bottom: 1.2rem;
-  min-height: 1.6rem;
+  font-size: 1.1rem; font-weight: 700;
+  color: #333; text-align: center;
+  margin-bottom: 1.2rem; min-height: 1.6rem;
 }
 #stato.rec { color: #cc0000; }
 
 /* MICROFONO */
 #micBtn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: flex; align-items: center; justify-content: center;
   width: clamp(110px, 28vw, 150px);
   height: clamp(110px, 28vw, 150px);
-  border-radius: 50%;
-  border: none;
+  border-radius: 50%; border: none;
   background: linear-gradient(145deg, #5b9bf8, #1a5fd4);
   box-shadow: 0 6px 24px rgba(79,142,247,0.5);
   margin: 0 auto 1.2rem;
@@ -79,26 +86,22 @@ h1 {
   50%      { box-shadow: 0 6px 44px rgba(200,0,0,0.65); }
 }
 #micBtn svg {
-  width: clamp(44px, 11vw, 60px);
-  height: clamp(44px, 11vw, 60px);
-  fill: none; stroke: #fff;
-  stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
+  width: clamp(44px, 11vw, 60px); height: clamp(44px, 11vw, 60px);
+  fill: none; stroke: #fff; stroke-width: 2;
+  stroke-linecap: round; stroke-linejoin: round;
 }
 
 /* WAVEFORM */
 #wave {
   display: flex; align-items: center; justify-content: center;
-  gap: clamp(4px, 1.2vw, 7px);
-  height: clamp(32px, 8vw, 48px);
-  margin-bottom: 1rem;
-  visibility: hidden;
+  gap: clamp(4px,1.2vw,7px);
+  height: clamp(32px,8vw,48px);
+  margin-bottom: 1rem; visibility: hidden;
 }
 #wave.on { visibility: visible; }
 .wb {
-  width: clamp(5px, 1.3vw, 8px);
-  background: #cc0000;
-  border-radius: 4px;
-  animation: wba 0.75s ease-in-out infinite;
+  width: clamp(5px,1.3vw,8px); background: #cc0000;
+  border-radius: 4px; animation: wba 0.75s ease-in-out infinite;
 }
 .wb:nth-child(1){height:25%;animation-delay:0s}
 .wb:nth-child(2){height:55%;animation-delay:.1s}
@@ -109,21 +112,16 @@ h1 {
 .wb:nth-child(7){height:25%;animation-delay:.05s}
 @keyframes wba {
   0%,100%{ transform:scaleY(0.3); opacity:0.45; }
-  50%    { transform:scaleY(1);   opacity:1; }
+  50%    { transform:scaleY(1); opacity:1; }
 }
 
 /* TBOX */
 #tbox {
-  background: #f0f4ff;
-  border: 2px solid #b0c4f8;
-  border-radius: 1rem;
-  padding: 1rem;
-  font-size: 1.05rem;
-  line-height: 1.7;
-  color: #0a0a0a;
-  min-height: 5.5rem;
-  margin-bottom: 1rem;
-  word-break: break-word;
+  background: #f0f4ff; border: 2px solid #b0c4f8;
+  border-radius: 1rem; padding: 1rem;
+  font-size: 1.05rem; line-height: 1.7;
+  color: #0a0a0a; min-height: 5.5rem;
+  margin-bottom: 1rem; word-break: break-word;
 }
 .ph  { color: #999; font-style: italic; }
 .int { color: #777; }
@@ -131,35 +129,20 @@ h1 {
 /* BOTTONI */
 .btn-row { display: flex; gap: 0.7rem; }
 .btn-row button {
-  flex: 1;
-  padding: 1rem 0.6rem;
+  flex: 1; padding: 1rem 0.6rem;
   border-radius: 0.9rem;
-  font-size: 1rem;
-  font-weight: 800;
-  border: none;
-  cursor: pointer;
+  font-size: 1rem; font-weight: 800;
+  border: none; cursor: pointer;
   -webkit-tap-highlight-color: transparent;
   transition: transform 0.1s, opacity 0.1s;
 }
 .btn-row button:active { transform: scale(0.93); }
 .btn-row button:disabled { opacity: 0.3; }
-#btnC {
-  background: #eef0f8;
-  color: #333;
-  border: 2px solid #d0d8f0;
-}
-#btnS {
-  background: linear-gradient(135deg, #5b9bf8, #1a5fd4);
-  color: #fff;
-  box-shadow: 0 4px 16px rgba(79,142,247,0.4);
-}
+#btnC { background: #eef0f8; color: #333; border: 2px solid #d0d8f0; }
+#btnS { background: linear-gradient(135deg, #5b9bf8, #1a5fd4); color: #fff; box-shadow: 0 4px 16px rgba(79,142,247,0.4); }
 
 /* LISTA */
-.lhdr {
-  display: flex; align-items: center;
-  justify-content: space-between;
-  margin-bottom: 1rem;
-}
+.lhdr { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
 .ltit { font-size: 1.2rem; font-weight: 900; color: #0a0a0a; }
 #cnt {
   font-size: 0.85rem; font-weight: 800;
@@ -169,34 +152,23 @@ h1 {
 
 .nota {
   display: flex; align-items: flex-start; gap: 0.8rem;
-  padding: 1rem 0;
-  border-bottom: 2px solid #f0f2f8;
+  padding: 1rem 0; border-bottom: 2px solid #f0f2f8;
 }
 .nota:last-child { border-bottom: none; }
 
 .chk {
-  width: clamp(32px, 8vw, 40px);
-  height: clamp(32px, 8vw, 40px);
-  flex-shrink: 0;
-  border-radius: 50%;
-  border: 2.5px solid #bbb;
-  background: #fff;
+  width: clamp(32px,8vw,40px); height: clamp(32px,8vw,40px);
+  flex-shrink: 0; border-radius: 50%;
+  border: 2.5px solid #bbb; background: #fff;
   display: flex; align-items: center; justify-content: center;
   font-size: 1rem; font-weight: 900; color: #fff;
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-  margin-top: 0.1rem;
-  transition: all 0.18s;
+  cursor: pointer; -webkit-tap-highlight-color: transparent;
+  margin-top: 0.1rem; transition: all 0.18s;
 }
 .chk.fatto { background: #22aa55; border-color: #22aa55; }
 
 .nota-body { flex: 1; min-width: 0; }
-.ntxt {
-  font-size: 1rem;
-  font-weight: 600;
-  color: #0a0a0a;
-  line-height: 1.5;
-}
+.ntxt { font-size: 1rem; font-weight: 600; color: #0a0a0a; line-height: 1.5; }
 .ntxt.fatto { text-decoration: line-through; color: #aaa; font-weight: 400; }
 .nts { font-size: 0.75rem; color: #999; margin-top: 0.2rem; }
 
@@ -210,20 +182,14 @@ h1 {
 .p-err { background:#fddede; color:#cc0000; }
 .p-snd { background:#ddeeff; color:#0055aa; }
 
-.vuoto {
-  font-size: 1rem; color: #aaa;
-  text-align: center; padding: 2rem 0; font-style: italic;
-}
+.vuoto { font-size: 1rem; color: #aaa; text-align: center; padding: 2rem 0; font-style: italic; }
 
-/* TOAST */
 #toast {
   position: fixed; bottom: 1.5rem; left: 50%;
   transform: translateX(-50%) translateY(80px);
-  background: #111;
-  color: #fff;
+  background: #111; color: #fff;
   font-size: 1rem; font-weight: 700;
-  padding: 0.85rem 1.6rem;
-  border-radius: 1rem;
+  padding: 0.85rem 1.6rem; border-radius: 1rem;
   box-shadow: 0 6px 28px rgba(0,0,0,0.3);
   transition: transform 0.28s cubic-bezier(.2,.8,.4,1);
   pointer-events: none; z-index: 999;
@@ -237,6 +203,17 @@ h1 {
 <h1>🎙 VoiceNotes</h1>
 <p class="sub">Parla · trascrivi · salva su Sheets</p>
 
+<!-- SETUP GAS URL -->
+<div class="card">
+  <div class="setup-label">URL Google Apps Script</div>
+  <div class="setup-row">
+    <input type="url" id="gasUrl" placeholder="https://script.google.com/macros/s/..." />
+    <button onclick="salvaUrl()">Salva</button>
+  </div>
+  <div id="gasStatus"></div>
+</div>
+
+<!-- REGISTRATORE -->
 <div class="card" style="text-align:center">
   <div id="stato">Tocca il microfono per dettare</div>
 
@@ -263,6 +240,7 @@ h1 {
   </div>
 </div>
 
+<!-- LISTA NOTE -->
 <div class="card">
   <div class="lhdr">
     <span class="ltit">Note salvate</span>
@@ -275,17 +253,44 @@ h1 {
 
 <script>
 var rec=null, staRec=false, fin='', intr='';
-var note=JSON.parse(localStorage.getItem('vn4')||'[]');
+var note=JSON.parse(localStorage.getItem('vn5')||'[]');
+var gasUrl=localStorage.getItem('gasUrl')||'';
 
+// ── SETUP ──
+function init(){
+  if(gasUrl){
+    document.getElementById('gasUrl').value=gasUrl;
+    setStatus('✅ Script configurato','ok');
+  }
+  initSpeech();
+  renderLista();
+}
+
+function salvaUrl(){
+  var v=document.getElementById('gasUrl').value.trim();
+  if(!v || v.indexOf('script.google.com')===-1){
+    setStatus('⚠ URL non valida','err'); return;
+  }
+  gasUrl=v;
+  localStorage.setItem('gasUrl',gasUrl);
+  setStatus('✅ Salvata!','ok');
+}
+
+function setStatus(msg,cls){
+  var el=document.getElementById('gasStatus');
+  el.textContent=msg; el.className=cls;
+}
+
+// ── SPEECH ──
 function initSpeech(){
   var SR=window.SpeechRecognition||window.webkitSpeechRecognition;
   if(!SR){
     document.getElementById('stato').textContent='⚠ Apri in Chrome';
-    document.getElementById('micBtn').disabled=true;
-    return;
+    document.getElementById('micBtn').disabled=true; return;
   }
   rec=new SR();
   rec.continuous=true; rec.interimResults=true; rec.lang='it-IT';
+
   rec.onresult=function(e){
     intr='';
     for(var i=e.resultIndex;i<e.results.length;i++){
@@ -294,15 +299,17 @@ function initSpeech(){
     }
     aggiorna();
   };
+
   rec.onerror=function(e){
+    stopRec();
     var msg={
-      'not-allowed':'⚠ Vai su Impostazioni del browser e consenti il microfono per questo sito',
-      'no-speech':'(nessun audio rilevato)',
+      'not-allowed':'⚠ Vai nelle impostazioni del browser e consenti il microfono',
+      'no-speech':'(silenzio rilevato, riprova)',
       'network':'⚠ Errore di rete'
     };
-    toast(msg[e.error]||'Errore: '+e.error);
-    stopRec();
+    toast(msg[e.error]||('Errore microfono: '+e.error));
   };
+
   rec.onend=function(){ if(staRec) rec.start(); };
 }
 
@@ -331,10 +338,13 @@ function aggiorna(){
   var tutto=(fin+intr).trim();
   if(!tutto){
     box.innerHTML='<span class="ph">La trascrizione apparirà qui…</span>';
-    document.getElementById('btnS').disabled=true;
-    return;
+    document.getElementById('btnS').disabled=true; return;
   }
-  box.innerHTML=esc(fin)+(intr?'<span class="int">'+esc(intr)+'</span>':'');
+  // Mostra finale (nero) + interim (grigio) — nessun "undefined"
+  var html='';
+  if(fin) html+=esc(fin);
+  if(intr) html+='<span class="int">'+esc(intr)+'</span>';
+  box.innerHTML=html;
   document.getElementById('btnS').disabled=!fin.trim();
 }
 
@@ -342,37 +352,42 @@ function cancella(){
   fin=''; intr=''; if(staRec)stopRec(); aggiorna();
 }
 
+// ── SALVA ──
 function salva(){
   var testo=fin.trim(); if(!testo)return;
   var n={id:Date.now(),testo:testo,ts:new Date().toLocaleString('it-IT'),fatto:false,sync:'sending'};
   note.unshift(n); persisti(); renderLista(); cancella();
 
-  // Se siamo su GAS usa google.script.run, altrimenti segna come locale
-  if(typeof google!=='undefined'&&google.script){
-    google.script.run
-      .withSuccessHandler(function(r){
-        n.sync=(r&&r.success)?'ok':'err';
-        toast(n.sync==='ok'?'✅ Salvata su Sheets!':'❌ '+(r&&r.error||'Errore'));
-        persisti(); renderLista();
-      })
-      .withFailureHandler(function(e){
-        n.sync='err'; toast('❌ '+e.message); persisti(); renderLista();
-      })
-      .saveNota(testo,'Aperta');
-  } else {
-    n.sync='local'; toast('📵 Salvata in locale (nessuno script GAS)');
-    persisti(); renderLista();
+  if(!gasUrl){
+    n.sync='local';
+    toast('📵 Nota salvata in locale — configura prima l\'URL dello script');
+    persisti(); renderLista(); return;
   }
+
+  // Chiamata GET con parametri → niente CORS
+  var url=gasUrl+'?text='+encodeURIComponent(testo)+'&status=Aperta';
+  fetch(url,{method:'GET',mode:'no-cors'})
+    .then(function(){
+      n.sync='ok';
+      toast('✅ Salvata su Google Sheets!');
+      persisti(); renderLista();
+    })
+    .catch(function(e){
+      n.sync='err';
+      toast('❌ Errore invio: '+e.message);
+      persisti(); renderLista();
+    });
 }
 
+// ── LISTA ──
 function renderLista(){
   var el=document.getElementById('lista');
   document.getElementById('cnt').textContent=note.length;
   if(!note.length){el.innerHTML='<div class="vuoto">Nessuna nota ancora</div>';return;}
-  var sm={ok:'p-ok ✅',sending:'p-snd ⟳',err:'p-err ❌',local:'p-pnd 📵'};
+  var sm={ok:'p-ok ✅ Sheets',sending:'p-snd ⟳ invio…',err:'p-err ❌ errore',local:'p-pnd 📵 locale'};
   el.innerHTML=note.map(function(n){
     var parts=(sm[n.sync]||'p-pnd ⏳').split(' ');
-    var sc=parts[0], sl=parts.slice(1).join(' ');
+    var sc=parts.shift(), sl=parts.join(' ');
     return '<div class="nota">'+
       '<div class="chk '+(n.fatto?'fatto':'')+'" onclick="toggle('+n.id+')">'+(n.fatto?'✓':'')+'</div>'+
       '<div class="nota-body">'+
@@ -389,8 +404,13 @@ function toggle(id){
   if(n){n.fatto=!n.fatto;persisti();renderLista();}
 }
 
-function persisti(){localStorage.setItem('vn4',JSON.stringify(note));}
-function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function persisti(){localStorage.setItem('vn5',JSON.stringify(note));}
+
+function esc(s){
+  if(s===undefined||s===null)return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
 var tt;
 function toast(m){
   var el=document.getElementById('toast');
@@ -398,7 +418,7 @@ function toast(m){
   clearTimeout(tt); tt=setTimeout(function(){el.classList.remove('on');},4000);
 }
 
-initSpeech(); renderLista();
+init();
 </script>
 </body>
 </html>
