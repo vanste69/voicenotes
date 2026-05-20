@@ -64,15 +64,6 @@ h1 { font-size: 2rem; font-weight: 900; margin-bottom: 0.2rem; }
 .pill { font-size: 0.75rem; font-weight: 800; padding: 0.25rem 0.55rem; border-radius: 0.5rem; flex-shrink: 0; margin-top: 0.2rem; white-space: nowrap; }
 .p-ok{background:#d0f5e0;color:#1a7a3a}.p-pnd{background:#fff3cc;color:#886600}.p-err{background:#fddede;color:#cc0000}.p-snd{background:#ddeeff;color:#0055aa}
 .vuoto { font-size: 1rem; color: #aaa; text-align: center; padding: 2rem 0; font-style: italic; }
-
-/* DEBUG BOX */
-#debugBox {
-  display: none; background: #111; color: #0f0; font-family: monospace;
-  font-size: 12px; padding: 0.8rem; border-radius: 0.8rem;
-  margin-top: 0.8rem; max-height: 180px; overflow-y: auto;
-  line-height: 1.5; word-break: break-all;
-}
-
 #toast { position: fixed; bottom: 1.5rem; left: 50%; transform: translateX(-50%) translateY(80px); background: #111; color: #fff; font-size: 1rem; font-weight: 700; padding: 0.85rem 1.6rem; border-radius: 1rem; box-shadow: 0 6px 28px rgba(0,0,0,0.3); transition: transform 0.28s cubic-bezier(.2,.8,.4,1); pointer-events: none; z-index: 999; max-width: 88vw; text-align: center; }
 #toast.on { transform: translateX(-50%) translateY(0); }
 </style>
@@ -111,7 +102,6 @@ h1 { font-size: 2rem; font-weight: 900; margin-bottom: 0.2rem; }
     <button id="btnC" onclick="cancella()">🗑 Cancella</button>
     <button id="btnS" onclick="salva()" disabled>💾 Salva su Sheets</button>
   </div>
-  <div id="debugBox"></div>
 </div>
 
 <div class="card">
@@ -125,181 +115,212 @@ h1 { font-size: 2rem; font-weight: 900; margin-bottom: 0.2rem; }
 <div id="toast"></div>
 
 <script>
-var rec=null, staRec=false, fin='', intr='';
-var note=JSON.parse(localStorage.getItem('vn5')||'[]');
-var gasUrl=localStorage.getItem('gasUrl')||'';
+var rec = null;
+var staRec = false;      // l'utente vuole registrare
+var isStarting = false;  // stiamo già chiamando rec.start(), evita doppioni
+var fin = '';            // testo finale confermato
+var intr = '';           // testo interim (in corso)
+var vistiFinal = {};     // indici già processati come isFinal — evita duplicati
 
-function dbg(msg){
-  var el=document.getElementById('debugBox');
-  var d=new Date();
-  var ts=d.getHours()+':'+('0'+d.getMinutes()).slice(-2)+':'+('0'+d.getSeconds()).slice(-2);
-  el.innerHTML='<div>['+ts+'] '+esc(String(msg))+'</div>'+el.innerHTML;
-  el.style.display='block';
-}
+var note = JSON.parse(localStorage.getItem('vn6') || '[]');
+var gasUrl = localStorage.getItem('gasUrl') || '';
 
-function init(){
-  if(gasUrl){
-    document.getElementById('gasUrl').value=gasUrl;
-    setStatus('✅ Script configurato','ok');
+// ── INIT ──
+function init() {
+  if (gasUrl) {
+    document.getElementById('gasUrl').value = gasUrl;
+    setStatus('✅ Script configurato', 'ok');
   }
   initSpeech();
   renderLista();
 }
 
-function salvaUrl(){
-  var v=document.getElementById('gasUrl').value.trim();
-  if(!v||v.indexOf('script.google.com')===-1){setStatus('⚠ URL non valida','err');return;}
-  gasUrl=v; localStorage.setItem('gasUrl',gasUrl); setStatus('✅ Salvata!','ok');
+function salvaUrl() {
+  var v = document.getElementById('gasUrl').value.trim();
+  if (!v || v.indexOf('script.google.com') === -1) { setStatus('⚠ URL non valida', 'err'); return; }
+  gasUrl = v; localStorage.setItem('gasUrl', gasUrl); setStatus('✅ Salvata!', 'ok');
+}
+function setStatus(msg, cls) {
+  var el = document.getElementById('gasStatus'); el.textContent = msg; el.className = cls;
 }
 
-function setStatus(msg,cls){
-  var el=document.getElementById('gasStatus'); el.textContent=msg; el.className=cls;
-}
-
-function initSpeech(){
-  var ua=navigator.userAgent;
-  dbg('UA: '+ua.substring(0,80));
-  var SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-  if(!SR){
-    dbg('❌ SpeechRecognition non trovato');
-    document.getElementById('stato').textContent='⚠ Usa Chrome su Android — Safari non supporta la trascrizione';
-    document.getElementById('micBtn').disabled=true;
+// ── SPEECH ──
+function initSpeech() {
+  var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) {
+    document.getElementById('stato').textContent = '⚠ Usa Chrome su Android — Safari non supporta la trascrizione';
+    document.getElementById('micBtn').disabled = true;
     return;
   }
-  dbg('✅ SpeechRecognition disponibile');
-  rec=new SR();
-  rec.continuous=true;
-  rec.interimResults=true;
-  rec.lang='it-IT';
+  buildRec(SR);
+}
 
-  rec.onstart=function(){ dbg('▶ rec.onstart'); };
+function buildRec(SR) {
+  rec = new SR();
+  rec.continuous = false;   // false = iOS non fa loop di onend infiniti
+  rec.interimResults = true;
+  rec.lang = 'it-IT';
 
-  rec.onresult=function(e){
-    intr='';
-    dbg('onresult: '+e.results.length+' results, index='+e.resultIndex);
-    for(var i=e.resultIndex;i<e.results.length;i++){
-      var res=e.results[i];
-      var alt=res[0];
-      var t=(alt && alt.transcript!==undefined && alt.transcript!==null) ? String(alt.transcript) : '';
-      dbg('  ['+i+'] isFinal='+res.isFinal+' conf='+(alt?alt.confidence:'?')+' t="'+t+'"');
-      if(res.isFinal) fin+=t+' '; else intr+=t;
+  rec.onstart = function() {
+    isStarting = false;
+  };
+
+  rec.onresult = function(e) {
+    // Raccoglie solo risultati non ancora processati
+    for (var i = e.resultIndex; i < e.results.length; i++) {
+      var res = e.results[i];
+      var alt = res[0];
+      var t = (alt && alt.transcript != null) ? String(alt.transcript) : '';
+
+      if (res.isFinal) {
+        // Evita di aggiungere lo stesso indice due volte
+        if (!vistiFinal[i]) {
+          vistiFinal[i] = true;
+          fin += t + ' ';
+        }
+        intr = '';
+      } else {
+        intr = t;
+      }
     }
     aggiorna();
   };
 
-  rec.onnomatch=function(){ dbg('onnomatch'); };
-
-  rec.onerror=function(e){
-    dbg('❌ onerror: '+e.error);
+  rec.onerror = function(e) {
+    isStarting = false;
+    if (e.error === 'no-speech') {
+      // Su iOS scatta spesso — riavvia silenziosamente se stiamo registrando
+      if (staRec) riavvia(SR);
+      return;
+    }
     stopRec();
-    var msg={
-      'not-allowed':'⚠ Consenti il microfono nelle impostazioni del browser',
-      'no-speech':'(silenzio, riprova)',
-      'network':'⚠ Errore di rete — la trascrizione richiede connessione'
+    var msg = {
+      'not-allowed': '⚠ Consenti il microfono nelle impostazioni del browser',
+      'network': '⚠ Errore di rete — la trascrizione richiede connessione'
     };
-    toast(msg[e.error]||('Errore: '+e.error));
+    toast(msg[e.error] || ('Errore: ' + e.error));
   };
 
-  rec.onend=function(){
-    dbg('rec.onend staRec='+staRec);
-    if(staRec) rec.start();
+  rec.onend = function() {
+    isStarting = false;
+    if (staRec) riavvia(SR);
   };
 }
 
-function toggleRec(){ staRec?stopRec():startRec(); }
+function riavvia(SR) {
+  if (isStarting || !staRec) return;
+  isStarting = true;
+  // Piccolo delay per evitare il loop rapido su iOS
+  setTimeout(function() {
+    if (!staRec) { isStarting = false; return; }
+    try {
+      // Ricrea il riconoscitore per evitare stati sporchi su iOS
+      buildRec(SR);
+      rec.start();
+    } catch(e) {
+      isStarting = false;
+    }
+  }, 300);
+}
 
-function startRec(){
-  if(!rec){dbg('rec è null!');return;}
-  staRec=true;
-  try{ rec.start(); } catch(e){ dbg('start() error: '+e.message); }
+function toggleRec() { staRec ? stopRec() : startRec(); }
+
+function startRec() {
+  if (!rec || isStarting) return;
+  staRec = true;
+  isStarting = true;
+  vistiFinal = {}; // reset indici a ogni nuova sessione
+  try { rec.start(); } catch(e) { isStarting = false; }
   document.getElementById('micBtn').classList.add('rec');
-  document.getElementById('stato').textContent='● Sto ascoltando…';
-  document.getElementById('stato').className='rec';
+  document.getElementById('stato').textContent = '● Sto ascoltando…';
+  document.getElementById('stato').className = 'rec';
   document.getElementById('wave').classList.add('on');
 }
 
-function stopRec(){
-  staRec=false;
-  try{ if(rec)rec.stop(); } catch(e){}
+function stopRec() {
+  staRec = false; isStarting = false;
+  try { if (rec) rec.stop(); } catch(e) {}
   document.getElementById('micBtn').classList.remove('rec');
-  document.getElementById('stato').textContent='Tocca il microfono per dettare';
-  document.getElementById('stato').className='';
+  document.getElementById('stato').textContent = 'Tocca il microfono per dettare';
+  document.getElementById('stato').className = '';
   document.getElementById('wave').classList.remove('on');
-  intr=''; aggiorna();
+  intr = ''; aggiorna();
 }
 
-function aggiorna(){
-  var box=document.getElementById('tbox');
-  var finSafe=fin||'';
-  var intrSafe=intr||'';
-  var tutto=(finSafe+intrSafe).trim();
-  if(!tutto){
-    box.innerHTML='<span class="ph">La trascrizione apparirà qui…</span>';
-    document.getElementById('btnS').disabled=true;
+function aggiorna() {
+  var box = document.getElementById('tbox');
+  var finS = fin || '';
+  var intrS = intr || '';
+  var tutto = (finS + intrS).trim();
+  if (!tutto) {
+    box.innerHTML = '<span class="ph">La trascrizione apparirà qui…</span>';
+    document.getElementById('btnS').disabled = true;
     return;
   }
-  var html='';
-  if(finSafe) html+=esc(finSafe);
-  if(intrSafe) html+='<span class="int">'+esc(intrSafe)+'</span>';
-  box.innerHTML=html;
-  document.getElementById('btnS').disabled=!finSafe.trim();
+  var html = esc(finS);
+  if (intrS) html += '<span class="int">' + esc(intrS) + '</span>';
+  box.innerHTML = html;
+  document.getElementById('btnS').disabled = !finS.trim();
 }
 
-function cancella(){
-  fin=''; intr=''; if(staRec)stopRec(); aggiorna();
+function cancella() {
+  fin = ''; intr = ''; vistiFinal = {};
+  if (staRec) stopRec();
+  aggiorna();
 }
 
-function salva(){
-  var testo=(fin||'').trim(); if(!testo)return;
-  var n={id:Date.now(),testo:testo,ts:new Date().toLocaleString('it-IT'),fatto:false,sync:'sending'};
+// ── SALVA ──
+function salva() {
+  var testo = (fin || '').trim(); if (!testo) return;
+  var n = { id: Date.now(), testo: testo, ts: new Date().toLocaleString('it-IT'), fatto: false, sync: 'sending' };
   note.unshift(n); persisti(); renderLista(); cancella();
-  if(!gasUrl){
-    n.sync='local'; toast('📵 Salvata in locale — inserisci URL script GAS');
+  if (!gasUrl) {
+    n.sync = 'local'; toast('📵 Salvata in locale — inserisci URL script GAS');
     persisti(); renderLista(); return;
   }
-  var url=gasUrl+'?text='+encodeURIComponent(testo)+'&status=Aperta';
-  dbg('fetch: '+url.substring(0,60)+'…');
-  fetch(url,{method:'GET',mode:'no-cors'})
-    .then(function(){ n.sync='ok'; toast('✅ Salvata su Google Sheets!'); persisti(); renderLista(); })
-    .catch(function(e){ n.sync='err'; toast('❌ '+e.message); persisti(); renderLista(); });
+  var url = gasUrl + '?text=' + encodeURIComponent(testo) + '&status=Aperta';
+  fetch(url, { method: 'GET', mode: 'no-cors' })
+    .then(function() { n.sync = 'ok'; toast('✅ Salvata su Google Sheets!'); persisti(); renderLista(); })
+    .catch(function(e) { n.sync = 'err'; toast('❌ ' + e.message); persisti(); renderLista(); });
 }
 
-function renderLista(){
-  var el=document.getElementById('lista');
-  document.getElementById('cnt').textContent=note.length;
-  if(!note.length){el.innerHTML='<div class="vuoto">Nessuna nota ancora</div>';return;}
-  var sm={ok:'p-ok ✅ Sheets',sending:'p-snd ⟳ invio…',err:'p-err ❌ errore',local:'p-pnd 📵 locale'};
-  el.innerHTML=note.map(function(n){
-    var parts=(sm[n.sync]||'p-pnd ⏳').split(' ');
-    var sc=parts.shift(), sl=parts.join(' ');
-    return '<div class="nota">'+
-      '<div class="chk '+(n.fatto?'fatto':'')+'" onclick="toggle('+n.id+')">'+(n.fatto?'✓':'')+'</div>'+
-      '<div class="nota-body">'+
-        '<div class="ntxt '+(n.fatto?'fatto':'')+'">'+esc(n.testo)+'</div>'+
-        '<div class="nts">'+n.ts+'</div>'+
-      '</div>'+
-      '<span class="pill '+sc+'">'+sl+'</span>'+
+// ── LISTA ──
+function renderLista() {
+  var el = document.getElementById('lista');
+  document.getElementById('cnt').textContent = note.length;
+  if (!note.length) { el.innerHTML = '<div class="vuoto">Nessuna nota ancora</div>'; return; }
+  var sm = { ok: 'p-ok ✅ Sheets', sending: 'p-snd ⟳ invio…', err: 'p-err ❌ errore', local: 'p-pnd 📵 locale' };
+  el.innerHTML = note.map(function(n) {
+    var parts = (sm[n.sync] || 'p-pnd ⏳').split(' ');
+    var sc = parts.shift(), sl = parts.join(' ');
+    return '<div class="nota">' +
+      '<div class="chk ' + (n.fatto ? 'fatto' : '') + '" onclick="toggle(' + n.id + ')">' + (n.fatto ? '✓' : '') + '</div>' +
+      '<div class="nota-body">' +
+        '<div class="ntxt ' + (n.fatto ? 'fatto' : '') + '">' + esc(n.testo) + '</div>' +
+        '<div class="nts">' + n.ts + '</div>' +
+      '</div>' +
+      '<span class="pill ' + sc + '">' + sl + '</span>' +
     '</div>';
   }).join('');
 }
 
-function toggle(id){
-  var n=note.find(function(x){return x.id===id;});
-  if(n){n.fatto=!n.fatto;persisti();renderLista();}
+function toggle(id) {
+  var n = note.find(function(x) { return x.id === id; });
+  if (n) { n.fatto = !n.fatto; persisti(); renderLista(); }
 }
 
-function persisti(){ localStorage.setItem('vn5',JSON.stringify(note)); }
+function persisti() { localStorage.setItem('vn6', JSON.stringify(note)); }
 
-function esc(s){
-  if(s===undefined||s===null)return '';
-  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+function esc(s) {
+  if (s === undefined || s === null) return '';
+  return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
 var tt;
-function toast(m){
-  var el=document.getElementById('toast');
-  el.textContent=m; el.classList.add('on');
-  clearTimeout(tt); tt=setTimeout(function(){el.classList.remove('on');},4000);
+function toast(m) {
+  var el = document.getElementById('toast');
+  el.textContent = m; el.classList.add('on');
+  clearTimeout(tt); tt = setTimeout(function() { el.classList.remove('on'); }, 4000);
 }
 
 init();
