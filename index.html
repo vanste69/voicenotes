@@ -43,7 +43,7 @@ h1 { font-size: 2rem; font-weight: 900; margin-bottom: 0.2rem; }
 .wb:nth-child(1){height:25%;animation-delay:0s}.wb:nth-child(2){height:55%;animation-delay:.1s}.wb:nth-child(3){height:85%;animation-delay:.2s}.wb:nth-child(4){height:55%;animation-delay:.3s}.wb:nth-child(5){height:85%;animation-delay:.15s}.wb:nth-child(6){height:50%;animation-delay:.25s}.wb:nth-child(7){height:25%;animation-delay:.05s}
 @keyframes wba { 0%,100%{transform:scaleY(0.3);opacity:0.45}50%{transform:scaleY(1);opacity:1} }
 
-#tbox { background: #f0f4ff; border: 2px solid #b0c4f8; border-radius: 1rem; padding: 1rem; font-size: 1.05rem; line-height: 1.7; color: #0a0a0a; min-height: 5.5rem; margin-bottom: 1rem; word-break: break-word; }
+#tbox { background: #f0f4ff; border: 2px solid #b0c4f8; border-radius: 1rem; padding: 1rem; font-size: 1.05rem; line-height: 1.7; color: #0a0a0a; min-height: 5.5rem; margin-bottom: 1rem; word-break: break-word; width: 100%; resize: vertical; font-family: inherit; outline: none; display: block; } #tbox:focus { border-color: #4f8ef7; }
 .ph { color: #999; font-style: italic; } .int { color: #777; }
 
 .btn-row { display: flex; gap: 0.7rem; }
@@ -66,7 +66,7 @@ h1 { font-size: 2rem; font-weight: 900; margin-bottom: 0.2rem; }
 
 /* SCHERMATA NOTE */
 .note-header { display: flex; align-items: center; gap: 1rem; margin-bottom: 1.2rem; }
-.btn-back { width: 44px; height: 44px; border-radius: 50%; background: #fff; border: 2px solid #d0d8f0; font-size: 1.3rem; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; -webkit-tap-highlight-color: transparent; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+.btn-back { width: 44px; height: 44px; border-radius: 50%; background: #fff; border: 2px solid #d0d8f0; font-size: 1.3rem; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; -webkit-tap-highlight-color: transparent; box-shadow: 0 2px 8px rgba(0,0,0,0.08); } .btn-refresh { width: 44px; height: 44px; border-radius: 50%; background: #fff; border: 2px solid #d0d8f0; font-size: 1.2rem; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; -webkit-tap-highlight-color: transparent; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-left: auto; } .note-header { display: flex; align-items: center; gap: 1rem; margin-bottom: 1.2rem; }
 .note-header h2 { font-size: 1.4rem; font-weight: 900; }
 
 .tabs { display: flex; gap: 0; margin-bottom: 1rem; background: #fff; border-radius: 1rem; padding: 0.3rem; box-shadow: 0 2px 12px rgba(60,80,180,0.08); }
@@ -92,6 +92,8 @@ h1 { font-size: 2rem; font-weight: 900; margin-bottom: 0.2rem; }
 
 #toast { position: fixed; bottom: 1.5rem; left: 50%; transform: translateX(-50%) translateY(80px); background: #111; color: #fff; font-size: 1rem; font-weight: 700; padding: 0.85rem 1.6rem; border-radius: 1rem; box-shadow: 0 6px 28px rgba(0,0,0,0.3); transition: transform 0.28s cubic-bezier(.2,.8,.4,1); pointer-events: none; z-index: 999; max-width: 88vw; text-align: center; }
 #toast.on { transform: translateX(-50%) translateY(0); }
+
+@keyframes spin { 0%{transform:rotate(0deg)}100%{transform:rotate(360deg)} }
 </style>
 </head>
 <body>
@@ -116,7 +118,7 @@ h1 { font-size: 2rem; font-weight: 900; margin-bottom: 0.2rem; }
       <div class="wb"></div><div class="wb"></div><div class="wb"></div>
       <div class="wb"></div>
     </div>
-    <div id="tbox"><span class="ph">La trascrizione apparirà qui…</span></div>
+    <textarea id="tbox" placeholder="La trascrizione apparirà qui… oppure scrivi direttamente" oninput="onTboxInput()"></textarea>
     <div class="btn-row">
       <button id="btnC" onclick="cancella()">🗑 Cancella</button>
       <button id="btnS" onclick="salva()" disabled>💾 Salva su Sheets</button>
@@ -133,6 +135,7 @@ h1 { font-size: 2rem; font-weight: 900; margin-bottom: 0.2rem; }
   <div class="note-header">
     <button class="btn-back" onclick="tornaRec()">←</button>
     <h2>📋 Le mie note</h2>
+    <button class="btn-refresh" onclick="aggiornaNote()" title="Aggiorna">🔄</button>
   </div>
   <div class="tabs">
     <button class="tab active" id="tabAperte" onclick="switchTab('Aperte')">Da fare <span class="tab-badge" id="cntAperte">0</span></button>
@@ -147,13 +150,12 @@ h1 { font-size: 2rem; font-weight: 900; margin-bottom: 0.2rem; }
 <div id="toast"></div>
 
 <script>
-var GAS_URL = 'https://script.google.com/macros/s/AKfycbzpnIqScT6MCtMzmx_2hYYxq5IwmYYIRgAkb33SCoeYuJJur-VTXV0w8GHzuka2UdA/exec';
+var GAS_URL = 'https://script.google.com/macros/s/AKfycbxMK79BJ0cFLKYkWl8T400cd0I09GAbsUtK0upC9SFx3NnLT8PqzSSZUwexatXQSQ0/exec';
 
-// ── STATO ──
-var SRClass  = null, rec = null;
-var staRec   = false, recBusy = false;
+var SRClass = null, rec = null;
+var staRec = false, recBusy = false;
 var fin = '', intr = '';
-var note = [];   // unica fonte: caricata da Sheets
+var note = [];
 
 // ── INIT ──
 function init() {
@@ -162,7 +164,18 @@ function init() {
     document.getElementById('stato').textContent = '⚠ Usa Chrome — Safari non supporta la trascrizione';
     document.getElementById('micBtn').disabled = true;
   }
-  caricaNote();  // carica subito da Sheets
+
+  // MODIFICA 3: tasto Back di Android → torna alla schermata registrazione
+  window.addEventListener('popstate', function() {
+    var noteScreen = document.getElementById('screenNote');
+    if (noteScreen.classList.contains('active')) {
+      tornaRec();
+    }
+  });
+  // Aggiungi uno stato iniziale alla history
+  history.pushState({ screen: 'rec' }, '');
+
+  caricaNote();
 }
 
 // ── API SHEETS ──
@@ -179,12 +192,7 @@ function caricaNote() {
     .then(function(r) {
       if (!r.success) { toast('⚠ Errore caricamento: ' + r.error); aggiornaBadge(); return; }
       note = (r.note || []).map(function(n) {
-        return {
-          id:    n.id,
-          testo: n.testo,
-          ts:    n.data + ' ' + n.ora,
-          fatto: n.stato === 'Fatta'
-        };
+        return { id: n.id, testo: n.testo, ts: n.data + ' ' + n.ora, fatto: n.stato === 'Fatta' };
       });
       aggiornaBadge();
     })
@@ -194,22 +202,31 @@ function caricaNote() {
 // ── NAVIGAZIONE ──
 function apriNote() {
   if (staRec) stopRec();
+  // Aggiungi stato history così il back button Android funziona
+  history.pushState({ screen: 'note' }, '');
   caricaNote();
-  renderNote([]);  // mostra subito lista vuota con spinner
+  renderNote([]);
   document.getElementById('screenRec').classList.remove('active');
   document.getElementById('screenNote').classList.add('active');
-  // Quando caricaNote finisce, aggiornaBadge+renderNote aggiornano
   var orig = aggiornaBadge;
-  aggiornaBadge = function() {
-    orig();
-    renderNote(note);
-    aggiornaBadge = orig;
-  };
+  aggiornaBadge = function() { orig(); renderNote(note); aggiornaBadge = orig; };
 }
+
 function tornaRec() {
   document.getElementById('screenNote').classList.remove('active');
   document.getElementById('screenRec').classList.add('active');
 }
+
+// MODIFICA 2: funzione aggiorna note
+function aggiornaNote() {
+  var btn = document.querySelector('.btn-refresh');
+  if (btn) btn.style.animation = 'spin 0.7s linear';
+  setTimeout(function(){ if (btn) btn.style.animation = ''; }, 700);
+  caricaNote();
+  var orig = aggiornaBadge;
+  aggiornaBadge = function() { orig(); renderNote(note); aggiornaBadge = orig; toast('✅ Note aggiornate'); };
+}
+
 function switchTab(nome) {
   ['Aperte','Fatte','Tutte'].forEach(function(t) {
     document.getElementById('tab'+t).classList.toggle('active', t === nome);
@@ -230,7 +247,7 @@ function makeRec(onend_cb) {
       if (e.results[i].isFinal) { fin += t + ' '; intr = ''; }
       else { intr = t; }
     }
-    aggiornaTbox();
+    sincronizzaTbox();
   };
   r.onerror = function(e) {
     recBusy = false;
@@ -239,7 +256,7 @@ function makeRec(onend_cb) {
     staRec = false; resetUI();
     toast({ 'not-allowed':'⚠ Consenti il microfono', 'network':'⚠ Errore di rete' }[e.error] || ('Errore: ' + e.error));
   };
-  r.onend = function() { recBusy = false; intr = ''; aggiornaTbox(); if (onend_cb) onend_cb(); };
+  r.onend = function() { recBusy = false; intr = ''; sincronizzaTbox(); if (onend_cb) onend_cb(); };
   return r;
 }
 
@@ -267,7 +284,7 @@ function scheduleRestart() {
 function stopRec() {
   staRec = false; recBusy = false; intr = '';
   try { if (rec) rec.abort(); } catch(e) {}
-  resetUI(); aggiornaTbox();
+  resetUI(); sincronizzaTbox();
 }
 
 function resetUI() {
@@ -277,30 +294,48 @@ function resetUI() {
   document.getElementById('wave').classList.remove('on');
 }
 
-function aggiornaTbox() {
+// MODIFICA 1: tbox è ora una textarea — sincronizza fin con il suo valore
+function sincronizzaTbox() {
   var box = document.getElementById('tbox');
-  var tutto = ((fin||'') + (intr||'')).trim();
-  if (!tutto) {
-    box.innerHTML = '<span class="ph">La trascrizione apparirà qui…</span>';
-    document.getElementById('btnS').disabled = true; return;
+  // Se il microfono ha qualcosa, aggiorna la textarea
+  var testoMic = ((fin||'') + (intr||'')).trim();
+  if (testoMic) {
+    // Scrivi nella textarea solo il testo finale (l'interim non va in textarea)
+    if (fin.trim()) box.value = fin.trimEnd();
   }
-  box.innerHTML = esc(fin||'') + (intr ? '<span class="int">'+esc(intr)+'</span>' : '');
-  document.getElementById('btnS').disabled = !(fin||'').trim();
+  aggiornaBottoneSalva();
+}
+
+// MODIFICA 1: legge dalla textarea (digitato o dettato)
+function onTboxInput() {
+  // L'utente sta scrivendo a mano — resetta fin con il contenuto attuale
+  fin = document.getElementById('tbox').value;
+  intr = '';
+  aggiornaBottoneSalva();
+}
+
+function aggiornaBottoneSalva() {
+  var testo = document.getElementById('tbox').value.trim();
+  document.getElementById('btnS').disabled = !testo;
 }
 
 function cancella() {
-  fin = ''; intr = ''; if (staRec) stopRec(); aggiornaTbox();
+  fin = ''; intr = '';
+  document.getElementById('tbox').value = '';
+  aggiornaBottoneSalva();
+  if (staRec) stopRec();
 }
 
 // ── SALVA ──
 function salva() {
-  var testo = (fin||'').trim(); if (!testo) return;
+  // Legge dalla textarea (sia testo dettato che digitato)
+  var testo = document.getElementById('tbox').value.trim();
+  if (!testo) return;
   cancella();
   toast('💾 Salvataggio…');
   gas({ action:'add', text: testo, status:'Aperta' })
     .then(function(r) {
       if (!r.success) { toast('❌ Errore: ' + r.error); return; }
-      // Aggiungi in cima senza ricaricare tutto
       note.unshift({ id: r.id, testo: testo, ts: new Date().toLocaleString('it-IT'), fatto: false });
       aggiornaBadge();
       toast('✅ Salvata su Google Sheets!');
@@ -335,7 +370,7 @@ function buildLista(lista) {
         '<div class="ntxt '+(n.fatto?'fatto':'')+'">'+esc(n.testo)+'</div>' +
         '<div class="nts">'+n.ts+'</div>' +
       '</div>' +
-      '<div class="btn-del" onclick="eliminaNota(\''+n.id+'\')" title="Elimina">🗑</div>' +
+      '<div class="btn-del" onclick="eliminaNota(\''+n.id+'\',\''+esc(n.testo)+'\')" title="Elimina">🗑</div>' +
     '</div>';
   }).join('');
 }
@@ -344,26 +379,26 @@ function toggleNota(id) {
   var n = note.find(function(x){ return x.id === id; });
   if (!n) return;
   n.fatto = !n.fatto;
-  var nuovoStato = n.fatto ? 'Fatta' : 'Aperta';
   renderNote(); aggiornaBadge();
-  gas({ action:'update', id: id, status: nuovoStato })
+  gas({ action:'update', id: id, status: n.fatto ? 'Fatta' : 'Aperta' })
     .then(function(r){ if (!r.success) toast('⚠ Sync stato fallita'); })
-    .catch(function(){ toast('⚠ Rete: sync stato fallita'); });
+    .catch(function(){ toast('⚠ Rete: sync fallita'); });
 }
 
-function eliminaNota(id) {
+// MODIFICA 4: passa anche il testo per archiviarlo
+function eliminaNota(id, testo) {
   if (!confirm('Eliminare questa nota?')) return;
   note = note.filter(function(x){ return x.id !== id; });
   renderNote(); aggiornaBadge();
-  gas({ action:'delete', id: id })
-    .then(function(r){ toast(r.success ? '🗑 Eliminata da Sheets' : '⚠ '+r.error); })
+  gas({ action:'delete', id: id, testo: testo })
+    .then(function(r){ toast(r.success ? '🗑 Eliminata e archiviata' : '⚠ '+r.error); })
     .catch(function(){ toast('⚠ Rete: eliminazione fallita'); });
 }
 
 // ── UTILS ──
 function esc(s) {
   if (s == null) return '';
-  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/'/g,'&#39;');
 }
 var tt;
 function toast(m) {
